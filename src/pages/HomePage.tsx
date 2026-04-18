@@ -19,10 +19,21 @@ import ProductCard from '../components/ProductCard';
 import { getProducts } from '../lib/store';
 
 export default function HomePage() {
-  const products = getProducts();
+  const [products, setProducts] = React.useState<any[]>([]);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    const fetchProducts = async () => {
+      const data = await getProducts();
+      setProducts(data);
+      setLoading(false);
+    };
+    fetchProducts();
+  }, []);
+
   const featuredProduct = products[0];
   
-  const containerRef = React.useRef(null);
+  const containerRef = React.useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({
     target: containerRef,
     offset: ["start start", "end end"]
@@ -30,8 +41,14 @@ export default function HomePage() {
 
   return (
     <div ref={containerRef} className="bg-[#FBFBFB] selection:bg-black selection:text-white overflow-hidden">
-      {/* 1. CINEMATIC HERO SECTION - DYNAMIC PRODUCT TIE-IN */}
-      <section className="min-h-[100dvh] flex items-center justify-center pt-20 pb-10 px-6 relative overflow-hidden bg-white">
+      {loading ? (
+        <div className="min-h-screen bg-white flex items-center justify-center">
+          <div className="w-12 h-12 border-4 border-black/10 border-t-black rounded-full animate-spin"></div>
+        </div>
+      ) : (
+        <>
+          {/* 1. CINEMATIC HERO SECTION - DYNAMIC PRODUCT TIE-IN */}
+          <section className="min-h-[100dvh] flex items-center justify-center pt-20 pb-10 px-6 relative overflow-hidden bg-white">
         <div className="max-w-[1400px] mx-auto w-full grid grid-cols-1 lg:grid-cols-2 gap-12 md:gap-20 items-center z-10">
           <motion.div 
             initial={{ opacity: 0, x: -30 }}
@@ -272,6 +289,8 @@ export default function HomePage() {
             ))}
          </div>
       </div>
+        </>
+      )}
     </div>
   );
 }

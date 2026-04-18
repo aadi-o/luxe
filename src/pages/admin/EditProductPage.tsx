@@ -32,16 +32,20 @@ export default function EditProductPage() {
   const [formData, setFormData] = React.useState<Partial<Product>>({});
 
   React.useEffect(() => {
-    if (id) {
-      const product = getProductById(id);
-      if (product) {
-        setFormData(product);
-        setIsLoading(false);
-      } else {
-        alert('Product not found');
-        navigate('/admin/dashboard');
+    const fetchProduct = async () => {
+      if (id) {
+        setIsLoading(true);
+        const product = await getProductById(id);
+        if (product) {
+          setFormData(product);
+          setIsLoading(false);
+        } else {
+          alert('Product not found');
+          navigate('/admin/dashboard');
+        }
       }
-    }
+    };
+    fetchProduct();
   }, [id, navigate]);
 
   const handleGenerate = async () => {
@@ -73,20 +77,24 @@ export default function EditProductPage() {
       return;
     }
     
+    setIsGenerating(true);
     try {
-      updateProduct(id, formData as ProductInput);
+      await updateProduct(id, formData as ProductInput);
       alert('Product updated successfully!');
       navigate('/admin/dashboard');
     } catch (error) {
       console.error(error);
       alert('Error updating product.');
+    } finally {
+      setIsGenerating(false);
     }
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (id) {
-      // Iframe environment blocks native confirm dialogs, using direct deletion.
-      deleteProduct(id);
+      setIsLoading(true);
+      await deleteProduct(id);
+      alert('Product deleted.');
       navigate('/admin/dashboard');
     }
   };

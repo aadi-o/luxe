@@ -20,19 +20,38 @@ import {
 import { getProducts, deleteProduct } from '../../lib/store';
 
 export default function DashboardPage() {
-  const [products, setProducts] = React.useState(getProducts());
+  const [products, setProducts] = React.useState<any[]>([]);
+  const [loading, setLoading] = React.useState(true);
   const [searchQuery, setSearchQuery] = React.useState('');
   const [activeTab, setActiveTab] = React.useState<'overview' | 'shop'>('overview');
+
+  const fetchProducts = async () => {
+    const data = await getProducts();
+    setProducts(data);
+    setLoading(false);
+  };
+
+  React.useEffect(() => {
+    fetchProducts();
+  }, []);
 
   const filteredProducts = products.filter(product =>
     product.title.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleDelete = (id: string) => {
-    // Iframe environment blocks native confirm dialogs, using direct deletion.
-    deleteProduct(id);
-    setProducts(getProducts());
+  const handleDelete = async (id: string) => {
+    setLoading(true);
+    await deleteProduct(id);
+    await fetchProducts();
   };
+
+  if (loading && products.length === 0) {
+    return (
+      <div className="min-h-[50vh] flex items-center justify-center">
+        <div className="w-12 h-12 border-4 border-black/10 border-t-black rounded-full animate-spin"></div>
+      </div>
+    );
+  }
 
   const stats = [
     { name: 'Total Products', value: products.length, icon: Package, color: 'bg-blue-50 text-blue-600' },

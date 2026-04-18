@@ -1,8 +1,24 @@
+import { 
+  collection, 
+  getDocs, 
+  doc, 
+  getDoc, 
+  addDoc, 
+  updateDoc, 
+  deleteDoc, 
+  query, 
+  where, 
+  orderBy, 
+  serverTimestamp,
+  Timestamp 
+} from 'firebase/firestore';
+import { db, isMock } from './firebase';
 import { Product, ProductInput } from '../types';
 
-const STORAGE_KEY = 'luxe_products_v1';
+const COLLECTION_NAME = 'products';
 
-const INITIAL_PRODUCTS: Product[] = [
+// Fallback initial products if database is empty and in mock mode
+const INITIAL_PRODUCTS : Product[] = [
   {
     id: '1',
     title: 'Minimalist Leather Carryall',
@@ -27,55 +43,145 @@ const INITIAL_PRODUCTS: Product[] = [
   }
 ];
 
-export const getProducts = (): Product[] => {
-  const stored = localStorage.getItem(STORAGE_KEY);
-  if (!stored) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(INITIAL_PRODUCTS));
-    return INITIAL_PRODUCTS;
+export const getProducts = async (): Promise<Product[]> => {
+  if (isMock) {
+    const stored = localStorage.getItem('luxe_products_v1');
+    if (!stored) {
+      localStorage.setItem('luxe_products_v1', JSON.stringify(INITIAL_PRODUCTS));
+      return INITIAL_PRODUCTS;
+    }
+    return JSON.parse(stored);
   }
-  return JSON.parse(stored);
+
+  try {
+    const q = query(collection(db, COLLECTION_NAME), orderBy('createdAt', 'desc'));
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map(document => {
+      const data = document.data();
+      return {
+        ...data,
+        id: document.id,
+        createdAt: data.createdAt instanceof Timestamp ? data.createdAt.toDate().toISOString() : data.createdAt
+      } as Product;
+    });
+  } catch (error) {
+    console.error("Error getting products:", error);
+    return [];
+  }
 };
 
-export const getProductBySlug = (slug: string): Product | undefined => {
-  return getProducts().find(p => p.slug === slug);
+export const getProductBySlug = async (slug: string): Promise<Product | undefined> => {
+  if (isMock) {
+    return (await getProducts()).find(p => p.slug === slug);
+  }
+
+  try {
+    const q = query(collection(db, COLLECTION_NAME), where('slug', '==', slug));
+    const querySnapshot = await getDocs(q);
+    if (querySnapshot.empty) return undefined;
+    const document = querySnapshot.docs[0];
+    const data = document.data();
+    return {
+      ...data,
+      id: document.id,
+      createdAt: data.createdAt instanceof Timestamp ? data.createdAt.toDate().toISOString() : data.createdAt
+    } as Product;
+  } catch (error) {
+    console.error("Error getting product by slug:", error);
+    return undefined;
+  }
 };
 
-export const getProductById = (id: string): Product | undefined => {
-  return getProducts().find(p => p.id === id);
+export const getProductById = async (id: string): Promise<Product | undefined> => {
+  if (isMock) {
+    return (await getProducts()).find(p => p.id === id);
+  }
+
+  try {
+    const docRef = doc(db, COLLECTION_NAME, id);
+    const docSnap = await getDoc(docRef);
+    if (!docSnap.exists()) return undefined;
+    const data = docSnap.data();
+    return {
+      ...data,
+      id: docSnap.id,
+      createdAt: data.createdAt instanceof Timestamp ? data.createdAt.toDate().toISOString() : data.createdAt
+    } as Product;
+  } catch (error) {
+    console.error("Error getting product by id:", error);
+    return undefined;
+  }
 };
 
-export const addProduct = (input: ProductInput): Product => {
-  const products = getProducts();
-  const newProduct: Product = {
-    ...input,
-    id: crypto.randomUUID(),
-    createdAt: new Date().toISOString(),
-  };
-  const updated = [newProduct, ...products];
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-  return newProduct;
+export const addProduct = async (input: ProductInput): Promise<Product> => {
+  if (isMock) {
+    const products = await getProducts();
+    const newProduct: Product = {
+      ...input,
+      id: crypto.randomUUID(),
+      createdAt: new Date().toISOString(),
+    };
+    localStorage.setItem('luxe_products_v1', JSON.stringify([newProduct, ...products]));
+    return newProduct;
+  }
+
+  try {
+    const docRef = await addDoc(collection(db, COLLECTION_NAME), {
+      ...input,
+      createdAt: serverTimestamp()
+    });
+    const newDoc = await getDoc(docRef);
+    const data = newDoc.data()!;
+    return {
+      ...data,
+      id: newDoc.id,
+      createdAt: data.createdAt instanceof Timestamp ? data.createdAt.toDate().toISOString() : new Date().toISOString()
+    } as Product;
+  } catch (error) {
+    console.error("Error adding product:", error);
+    throw error;
+  }
 };
 
-export const updateProduct = (id: string, input: Partial<ProductInput>): Product => {
-  const products = getProducts();
-  const index = products.findIndex(p => p.id === id);
-  if (index === -1) throw new Error('Product not found');
-  
-  const updatedProduct = {
-    ...products[index],
-    ...input,
-    updatedAt: new Date().toISOString(),
-  } as Product;
-  
-  const updatedProducts = [...products];
-  updatedProducts[index] = updatedProduct;
-  
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedProducts));
-  return updatedProduct;
+export const updateProduct = async (id: string, input: Partial<ProductInput>): Promise<Product> => {
+  if (isMock) {
+    const products = await getProducts();
+    const index = products.findIndex(p => p.id === id);
+    if (index === -1) throw new Error('Product not found');
+    const updatedProduct = { ...products[index], ...input, updatedAt: new Date().toISOString() } as Product;
+    const updatedProducts = [...products];
+    updatedProducts[index] = updatedProduct;
+    localStorage.setItem('luxe_products_v1', JSON.stringify(updatedProducts));
+    return updatedProduct;
+  }
+
+  try {
+    const docRef = doc(db, COLLECTION_NAME, id);
+    await updateDoc(docRef, {
+      ...input,
+      updatedAt: serverTimestamp()
+    });
+    const updated = await getProductById(id);
+    if (!updated) throw new Error('Product not found after update');
+    return updated;
+  } catch (error) {
+    console.error("Error updating product:", error);
+    throw error;
+  }
 };
 
-export const deleteProduct = (id: string) => {
-  const products = getProducts();
-  const updated = products.filter(p => p.id !== id);
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+export const deleteProduct = async (id: string): Promise<void> => {
+  if (isMock) {
+    const products = await getProducts();
+    const updated = products.filter(p => p.id !== id);
+    localStorage.setItem('luxe_products_v1', JSON.stringify(updated));
+    return;
+  }
+
+  try {
+    await deleteDoc(doc(db, COLLECTION_NAME, id));
+  } catch (error) {
+    console.error("Error deleting product:", error);
+    throw error;
+  }
 };

@@ -9,8 +9,35 @@ import { AnimatePresence } from 'motion/react';
 export default function ProductPage() {
   const { slug } = useParams();
   const navigate = useNavigate();
-  const product = getProductBySlug(slug || '');
+  const [product, setProduct] = React.useState<any>(null);
+  const [related, setRelated] = React.useState<any[]>([]);
+  const [loading, setLoading] = React.useState(true);
   const [activeImage, setActiveImage] = React.useState(0);
+
+  React.useEffect(() => {
+    const fetchProductData = async () => {
+      if (!slug) return;
+      setLoading(true);
+      const data = await getProductBySlug(slug);
+      setProduct(data);
+      
+      if (data) {
+        const allProducts = await getProducts();
+        const relatedItems = allProducts.filter(p => p.id !== data.id).slice(0, 2);
+        setRelated(relatedItems);
+      }
+      setLoading(false);
+    };
+    fetchProductData();
+  }, [slug]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="w-12 h-12 border-4 border-black/10 border-t-black rounded-full animate-spin"></div>
+      </div>
+    );
+  }
 
   if (!product) {
     return (
@@ -20,9 +47,6 @@ export default function ProductPage() {
       </div>
     );
   }
-
-  // Related products (simple random filter)
-  const related = getProducts().filter(p => p.id !== product.id).slice(0, 2);
 
   return (
     <motion.div 

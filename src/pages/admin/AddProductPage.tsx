@@ -113,13 +113,16 @@ export default function AddProductPage() {
       return;
     }
     
+    setIsGenerating(true); // Reuse loader state for save
     try {
-      addProduct(formData as ProductInput);
-      alert('Product published successfully!');
+      await addProduct(formData as ProductInput);
+      alert('Product published globally!');
       navigate('/admin/dashboard');
     } catch (error) {
       console.error(error);
-      alert('Error saving product.');
+      alert('Error saving product to cloud.');
+    } finally {
+      setIsGenerating(false);
     }
   };
 

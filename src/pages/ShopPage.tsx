@@ -5,13 +5,31 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Search, SlidersHorizontal } from 'lucide-react';
 
 export default function ShopPage() {
-  const products = getProducts();
+  const [products, setProducts] = React.useState<any[]>([]);
+  const [loading, setLoading] = React.useState(true);
   const [searchQuery, setSearchQuery] = React.useState('');
+
+  React.useEffect(() => {
+    const fetchProducts = async () => {
+      const data = await getProducts();
+      setProducts(data);
+      setLoading(false);
+    };
+    fetchProducts();
+  }, []);
 
   const filteredProducts = products.filter(p => 
     p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     p.category.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="w-12 h-12 border-4 border-black/10 border-t-black rounded-full animate-spin"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-12 md:space-y-24 texture pb-40 overflow-hidden">
