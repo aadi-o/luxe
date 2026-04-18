@@ -4,34 +4,18 @@ import { supabase, isMock } from '../lib/supabase';
 
 export default function ProtectedRoute() {
   const [user, setUser] = React.useState<any>(() => {
-    if (isMock) {
-      const isAuthed = localStorage.getItem('luxe_mock_auth') === 'true';
-      return isAuthed ? ({ email: 'authorized@luxe.com', user_metadata: { full_name: 'Authorized Administrator' } } as any) : null;
-    }
-    return null;
+    const isAuthed = localStorage.getItem('luxe_admin_auth') === 'true';
+    return isAuthed ? ({ email: 'ashu', user_metadata: { full_name: 'Administrator' } } as any) : null;
   });
-  const [loading, setLoading] = React.useState(!isMock);
+  const [loading, setLoading] = React.useState(false);
 
+  // Since we are using a simple local storage check, we don't need the complex Supabase auth listeners
+  // but we can keep a simple check to ensure UI sync
   React.useEffect(() => {
-    if (isMock) {
-      setLoading(false);
-      return;
+    const isAuthed = localStorage.getItem('luxe_admin_auth') === 'true';
+    if (!isAuthed) {
+      setUser(null);
     }
-
-    const fetchSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setUser(session?.user ?? null);
-      setLoading(false);
-    };
-
-    fetchSession();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
   }, []);
 
   if (loading) {
