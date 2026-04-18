@@ -1,0 +1,9 @@
+{
+  "apiKey": "PREVIEW_MODE",
+  "authDomain": "preview.firebaseapp.com",
+  "projectId": "preview",
+  "storageBucket": "preview.appspot.com",
+  "messagingSenderId": "0",
+  "appId": "0",
+  "firestoreDatabaseId": "(default)"
+}
