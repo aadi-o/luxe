@@ -2,8 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { LogIn, Mail, Lock, ShieldCheck, AlertCircle } from 'lucide-react';
-import { signInWithEmailAndPassword, signInAnonymously } from 'firebase/auth';
-import { auth, isMock } from '../../lib/firebase';
+import { supabase, isMock } from '../../lib/supabase';
 
 export default function LoginPage() {
   const [email, setEmail] = React.useState('');
@@ -28,7 +27,11 @@ export default function LoginPage() {
     }
 
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      if (error) throw error;
       navigate('/admin/dashboard');
     } catch (err: any) {
       console.error(err);

@@ -1,13 +1,12 @@
 import React from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
-import { auth, isMock } from '../lib/firebase';
-import { onAuthStateChanged, User } from 'firebase/auth';
+import { supabase, isMock } from '../lib/supabase';
 
 export default function ProtectedRoute() {
-  const [user, setUser] = React.useState<User | null>(() => {
+  const [user, setUser] = React.useState<any>(() => {
     if (isMock) {
       const isAuthed = localStorage.getItem('luxe_mock_auth') === 'true';
-      return isAuthed ? ({ email: 'authorized@luxe.com', displayName: 'Authorized Administrator' } as any) : null;
+      return isAuthed ? ({ email: 'authorized@luxe.com', user_metadata: { full_name: 'Authorized Administrator' } } as any) : null;
     }
     return null;
   });
@@ -19,11 +18,20 @@ export default function ProtectedRoute() {
       return;
     }
 
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
+    const fetchSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setUser(session?.user ?? null);
+      setLoading(false);
+    };
+
+    fetchSession();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
       setLoading(false);
     });
-    return () => unsubscribe();
+
+    return () => subscription.unsubscribe();
   }, []);
 
   if (loading) {

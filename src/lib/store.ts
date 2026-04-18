@@ -1,21 +1,7 @@
-import { 
-  collection, 
-  getDocs, 
-  doc, 
-  getDoc, 
-  addDoc, 
-  updateDoc, 
-  deleteDoc, 
-  query, 
-  where, 
-  orderBy, 
-  serverTimestamp,
-  Timestamp 
-} from 'firebase/firestore';
-import { db, isMock } from './firebase';
+import { supabase, isMock } from './supabase';
 import { Product, ProductInput } from '../types';
 
-const COLLECTION_NAME = 'products';
+const TABLE_NAME = 'products';
 
 // Fallback initial products if database is empty and in mock mode
 const INITIAL_PRODUCTS : Product[] = [
@@ -54,16 +40,13 @@ export const getProducts = async (): Promise<Product[]> => {
   }
 
   try {
-    const q = query(collection(db, COLLECTION_NAME), orderBy('createdAt', 'desc'));
-    const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map(document => {
-      const data = document.data();
-      return {
-        ...data,
-        id: document.id,
-        createdAt: data.createdAt instanceof Timestamp ? data.createdAt.toDate().toISOString() : data.createdAt
-      } as Product;
-    });
+    const { data, error } = await supabase
+      .from(TABLE_NAME)
+      .select('*')
+      .order('createdAt', { ascending: false });
+
+    if (error) throw error;
+    return data || [];
   } catch (error) {
     console.error("Error getting products:", error);
     return [];
@@ -76,16 +59,14 @@ export const getProductBySlug = async (slug: string): Promise<Product | undefine
   }
 
   try {
-    const q = query(collection(db, COLLECTION_NAME), where('slug', '==', slug));
-    const querySnapshot = await getDocs(q);
-    if (querySnapshot.empty) return undefined;
-    const document = querySnapshot.docs[0];
-    const data = document.data();
-    return {
-      ...data,
-      id: document.id,
-      createdAt: data.createdAt instanceof Timestamp ? data.createdAt.toDate().toISOString() : data.createdAt
-    } as Product;
+    const { data, error } = await supabase
+      .from(TABLE_NAME)
+      .select('*')
+      .eq('slug', slug)
+      .single();
+
+    if (error) throw error;
+    return data || undefined;
   } catch (error) {
     console.error("Error getting product by slug:", error);
     return undefined;
@@ -98,15 +79,14 @@ export const getProductById = async (id: string): Promise<Product | undefined> =
   }
 
   try {
-    const docRef = doc(db, COLLECTION_NAME, id);
-    const docSnap = await getDoc(docRef);
-    if (!docSnap.exists()) return undefined;
-    const data = docSnap.data();
-    return {
-      ...data,
-      id: docSnap.id,
-      createdAt: data.createdAt instanceof Timestamp ? data.createdAt.toDate().toISOString() : data.createdAt
-    } as Product;
+    const { data, error } = await supabase
+      .from(TABLE_NAME)
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (error) throw error;
+    return data || undefined;
   } catch (error) {
     console.error("Error getting product by id:", error);
     return undefined;
@@ -126,17 +106,17 @@ export const addProduct = async (input: ProductInput): Promise<Product> => {
   }
 
   try {
-    const docRef = await addDoc(collection(db, COLLECTION_NAME), {
-      ...input,
-      createdAt: serverTimestamp()
-    });
-    const newDoc = await getDoc(docRef);
-    const data = newDoc.data()!;
-    return {
-      ...data,
-      id: newDoc.id,
-      createdAt: data.createdAt instanceof Timestamp ? data.createdAt.toDate().toISOString() : new Date().toISOString()
-    } as Product;
+    const { data, error } = await supabase
+      .from(TABLE_NAME)
+      .insert([{
+        ...input,
+        createdAt: new Date().toISOString()
+      }])
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
   } catch (error) {
     console.error("Error adding product:", error);
     throw error;
@@ -156,14 +136,18 @@ export const updateProduct = async (id: string, input: Partial<ProductInput>): P
   }
 
   try {
-    const docRef = doc(db, COLLECTION_NAME, id);
-    await updateDoc(docRef, {
-      ...input,
-      updatedAt: serverTimestamp()
-    });
-    const updated = await getProductById(id);
-    if (!updated) throw new Error('Product not found after update');
-    return updated;
+    const { data, error } = await supabase
+      .from(TABLE_NAME)
+      .update({
+        ...input,
+        updatedAt: new Date().toISOString()
+      })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
   } catch (error) {
     console.error("Error updating product:", error);
     throw error;
@@ -179,7 +163,12 @@ export const deleteProduct = async (id: string): Promise<void> => {
   }
 
   try {
-    await deleteDoc(doc(db, COLLECTION_NAME, id));
+    const { error } = await supabase
+      .from(TABLE_NAME)
+      .delete()
+      .eq('id', id);
+
+    if (error) throw error;
   } catch (error) {
     console.error("Error deleting product:", error);
     throw error;
