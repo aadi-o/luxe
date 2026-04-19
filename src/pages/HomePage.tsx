@@ -21,6 +21,7 @@ import { getProducts } from '../lib/store';
 export default function HomePage() {
   const [products, setProducts] = React.useState<any[]>([]);
   const [loading, setLoading] = React.useState(true);
+  const [currentIndex, setCurrentIndex] = React.useState(0);
 
   React.useEffect(() => {
     const fetchProducts = async () => {
@@ -31,7 +32,27 @@ export default function HomePage() {
     fetchProducts();
   }, []);
 
-  const featuredProduct = products[0];
+  const heroProducts = products.length > 0 ? products.slice(0, 5) : [];
+  const featuredProduct = heroProducts[currentIndex] || products[0];
+
+  const handleDragEnd = (event: any, info: any) => {
+    if (heroProducts.length <= 1) return;
+    const swipeThreshold = 50;
+    if (info.offset.x < -swipeThreshold) {
+      setCurrentIndex((prev) => (prev + 1) % heroProducts.length);
+    } else if (info.offset.x > swipeThreshold) {
+      setCurrentIndex((prev) => (prev - 1 + heroProducts.length) % heroProducts.length);
+    }
+  };
+
+  const getRelativePosition = (idx: number) => {
+    const length = heroProducts.length;
+    if (length === 0) return 0;
+    let diff = (idx - currentIndex) % length;
+    if (diff < -Math.floor(length / 2)) diff += length;
+    if (diff > Math.floor(length / 2)) diff -= length;
+    return diff;
+  };
   
   const containerRef = React.useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({
@@ -71,64 +92,81 @@ export default function HomePage() {
               </p>
             </div>
 
-            {/* Floating Glassmorphism Hero Stack */}
-            <div className="relative w-full max-w-4xl aspect-video md:aspect-[21/9] mt-8 flex justify-center items-center">
-               
-               {/* Background Left Card */}
-               <motion.div 
-                 animate={{ y: [0, -10, 0], rotate: [-8, -8, -8], x: [-100, -100, -100] }}
-                 transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 0.2 }}
-                 className="absolute glass w-[50%] md:w-[35%] aspect-[3/4] shadow-xl opacity-60 z-0 origin-bottom flex flex-col p-4 glow-purple backdrop-blur-3xl"
-               >
-                  <div className="w-full h-3/5 rounded-xl overflow-hidden opacity-70 grayscale bg-black/5">
-                     {products[1]?.images?.[0] ? <img src={products[1].images[0]} className="w-full h-full object-cover" /> : null}
-                  </div>
-                  <div className="mt-4 flex flex-col items-center opacity-70">
-                    <div className="h-4 w-1/2 bg-black/10 rounded-full mb-2"></div>
-                    <div className="h-4 w-1/3 bg-black/10 rounded-full"></div>
-                  </div>
-               </motion.div>
+            {/* Interactive Swipeable Phone Carousel */}
+            <div className="relative w-[100vw] max-w-[100vw] h-[600px] md:h-[700px] mt-12 mb-8 flex justify-center items-center overflow-hidden" style={{ perspective: 1200, contain: 'layout size' }}>
+               {heroProducts.map((product, idx) => {
+                 const diff = getRelativePosition(idx);
+                 const isCenter = diff === 0;
+                 const isVisible = Math.abs(diff) <= 1;
 
-               {/* Background Right Card */}
-               <motion.div 
-                 animate={{ y: [0, -15, 0], rotate: [8, 8, 8], x: [100, 100, 100] }}
-                 transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
-                 className="absolute glass w-[50%] md:w-[35%] aspect-[3/4] shadow-xl opacity-60 z-0 origin-bottom flex flex-col p-4 glow-purple backdrop-blur-3xl"
-               >
-                  <div className="w-full h-3/5 rounded-xl overflow-hidden opacity-70 grayscale bg-black/5">
-                     {products[2]?.images?.[0] ? <img src={products[2].images[0]} className="w-full h-full object-cover" /> : null}
-                  </div>
-                  <div className="mt-4 flex flex-col items-center opacity-70">
-                    <div className="h-4 w-1/2 bg-black/10 rounded-full mb-2"></div>
-                    <div className="h-4 w-1/3 bg-black/10 rounded-full"></div>
-                  </div>
-               </motion.div>
+                 return (
+                   <motion.div
+                     key={product.id}
+                     drag={isCenter ? "x" : false}
+                     dragConstraints={{ left: 0, right: 0 }}
+                     dragElastic={0.15}
+                     onDragEnd={handleDragEnd}
+                     animate={{
+                       x: diff * (typeof window !== 'undefined' && window.innerWidth < 768 ? 260 : 360),
+                       scale: isCenter ? 1 : 0.85,
+                       opacity: isVisible ? (isCenter ? 1 : 0.4) : 0,
+                       zIndex: isCenter ? 20 : 10,
+                       rotateZ: diff * 5,
+                     }}
+                     transition={{
+                       type: "spring",
+                       stiffness: 400,
+                       damping: 35,
+                       mass: 0.8
+                     }}
+                     className={`absolute w-[260px] h-[550px] md:w-[320px] md:h-[650px] rounded-[3rem] border-[8px] md:border-[12px] border-white shadow-[0_30px_60px_-15px_rgba(0,0,0,0.15)] glass bg-white/90 overflow-hidden flex flex-col cursor-grab active:cursor-grabbing ${!isCenter ? "pointer-events-none" : ""}`}
+                     style={{ touchAction: 'pan-y', willChange: 'transform, opacity, z-index' }}
+                   >
+                     {/* Notch */}
+                     <div className="absolute top-2 md:top-3 left-1/2 -translate-x-1/2 w-20 md:w-28 h-5 md:h-7 bg-black rounded-full z-[100] flex items-center justify-end px-3">
+                        <div className="w-2 h-2 rounded-full bg-white/20"></div>
+                     </div>
+                     
+                     {/* App UI */}
+                     <div className="relative w-full h-[55%] bg-[#f5f5f7] flex items-center justify-center p-6 border-b border-black/5 mt-0">
+                        <img 
+                          src={product.images[0]} 
+                          alt={product.title} 
+                          className="w-full h-full object-cover rounded-2xl drop-shadow-xl select-none" 
+                          draggable="false"
+                        />
+                     </div>
+                     
+                     <div className="flex-grow p-4 md:p-6 flex flex-col justify-between bg-white text-center">
+                        <div>
+                           <div className="text-[9px] md:text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">{product.category}</div>
+                           <h3 className="text-xl md:text-2xl font-black mt-2 leading-[1.1] tracking-tight line-clamp-2 md:line-clamp-3">{product.title}</h3>
+                        </div>
+                        
+                        <div className="mt-4 space-y-3">
+                           <div className="text-xl md:text-2xl font-black text-gray-900">{product.currency || 'USD'} {product.price?.toLocaleString() || 0}</div>
+                           
+                           {isCenter && (
+                             <div className="text-[8px] font-bold text-gray-400 uppercase tracking-widest animate-pulse flex justify-center items-center space-x-2">
+                               <span>←</span><span>Swipe to Explore</span><span>→</span>
+                             </div>
+                           )}
 
-               {/* Center Main Card */}
-               <motion.div 
-                 animate={{ y: [0, -20, 0], scale: [1.05, 1.05, 1.05] }}
-                 transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                 className="absolute glass w-[60%] md:w-[40%] aspect-[3/4] z-10 glow-purple flex flex-col p-4 md:p-6 backdrop-blur-3xl"
-               >
-                  <div className="w-full h-2/3 rounded-[18px] flex-shrink-0 overflow-hidden relative mb-4 shadow-sm bg-black/5">
-                    <img 
-                      src={featuredProduct?.images?.[0] || "https://images.unsplash.com/photo-1542496658-e33a6d0d50f6?w=800&q=80"} 
-                      alt="Featured" 
-                      className="w-full h-full object-cover" 
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-60" />
-                    <div className="absolute bottom-4 left-4">
-                      <div className="text-black bg-white/60 backdrop-blur-md px-3 py-1 rounded-full text-xs font-semibold">{featuredProduct?.category || "Lifestyle"}</div>
-                    </div>
-                  </div>
-                  
-                  <div className="flex-grow flex flex-col justify-between items-center text-center px-2">
-                     <h3 className="text-xl md:text-2xl font-bold text-black leading-tight line-clamp-2">{featuredProduct?.title || "Product Title"}</h3>
-                     <Link to={featuredProduct ? `/product/${featuredProduct.slug}` : "/shop"} className="btn-accent px-8 py-3 rounded-full text-sm font-bold shadow-lg hover:scale-105 transition-transform w-[90%] md:w-auto mt-4 active:scale-95">
-                        {featuredProduct?.currency || "USD"} {featuredProduct?.price || "199"}
-                     </Link>
-                  </div>
-               </motion.div>
+                           <div className="w-full h-[1px] bg-black/5" />
+                           
+                           <Link 
+                             to={`/product/${product.slug}`} 
+                             className="block w-full py-3 md:py-4 bg-black text-white rounded-full font-black uppercase tracking-widest text-[9px] hover:bg-gray-800 transition-colors shadow-lg active:scale-95"
+                             onPointerDown={(e) => e.stopPropagation()}
+                             draggable="false"
+                           >
+                             View Artifact
+                           </Link>
+                        </div>
+                     </div>
+                   </motion.div>
+                 );
+               })}
             </div>
             
           </section>

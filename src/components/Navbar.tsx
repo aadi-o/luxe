@@ -26,7 +26,7 @@ export default function Navbar() {
   return (
     <nav 
       className={cn(
-        "fixed top-0 left-0 right-0 z-50 transition-all duration-700 overflow-hidden",
+        "fixed top-0 left-0 right-0 z-50 transition-all duration-[600ms] ease-[0.16,1,0.3,1] overflow-hidden transform-gpu",
         scrolled 
           ? "m-0 rounded-none bg-white/70 backdrop-blur-[40px] border-b border-black/5" 
           : "m-4 md:m-8 lg:m-10 mt-6 md:mt-8 rounded-[1.25rem] md:rounded-[2rem] glass gloss-highlight reflective-surface"
