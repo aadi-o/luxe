@@ -1,46 +1,55 @@
 @import "tailwindcss";
 
 @theme {
-  --font-display: "Space Grotesk", "Inter", sans-serif;
+  --font-display: "Inter", sans-serif;
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --color-brand: #000000;
-  --color-surface: #FBFBFB;
-  --radius-ios: 2.5rem;
+  --color-brand: #AD1DEB;
+  --color-surface: #6E72FC;
 }
 
 @layer utilities {
+  .bg-theme-gradient {
+    background: linear-gradient(135deg, #6E72FC 0%, #AD1DEB 100%);
+  }
+  .bg-theme-radial {
+    background-image: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.15), transparent 60%);
+  }
   .glass {
-    @apply backdrop-blur-[40px] bg-white/40 border border-white/60 shadow-[0_32px_100px_-20px_rgba(0,0,0,0.1)];
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    box-shadow: 0 8px 30px rgba(0,0,0,0.05);
   }
-  .glass-dark {
-    @apply backdrop-blur-[40px] bg-black/5 border border-white/10;
-  }
-  .reflective-surface {
-    @apply relative overflow-hidden;
-  }
-  .reflective-surface::after {
-    content: '';
-    @apply absolute inset-0 bg-gradient-to-br from-white/20 via-transparent to-transparent pointer-events-none;
-  }
-  .gloss-highlight {
-    @apply relative;
-  }
-  .gloss-highlight::before {
-    content: '';
-    @apply absolute top-0 left-4 right-4 h-[1px] bg-gradient-to-r from-transparent via-white/80 to-transparent pointer-events-none z-10;
-  }
-  .smooth-shadow {
+  .glow-purple {
     box-shadow: 
-      0 2px 4px rgba(0,0,0,0.02),
-      0 10px 20px rgba(0,0,0,0.04),
-      0 20px 40px rgba(0,0,0,0.04);
+      0 10px 40px rgba(0,0,0,0.08),
+      0 0 20px rgba(173, 29, 235, 0.15);
   }
-  .texture {
-    background-image: radial-gradient(circle at 2px 2px, rgba(0,0,0,0.05) 1px, transparent 0);
-    background-size: 24px 24px;
+  .btn-accent {
+    background: linear-gradient(135deg, #FFD54F, #FFB300);
+    color: black;
   }
-  .gradient-text {
-    @apply bg-clip-text text-transparent bg-gradient-to-br from-black via-black to-gray-400;
+  .btn-glass {
+    background: rgba(255,255,255,0.7);
+    border-radius: 12px;
+    padding: 10px 16px;
+    color: black;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(0,0,0,0.05);
+  }
+  .text-faded {
+    opacity: 0.03;
+    color: black;
+    font-size: 15vw;
+    font-weight: 700;
+  }
+  /* Blobs for depth */
+  .blob {
+    filter: blur(80px);
+    opacity: 0.15;
+    border-radius: 50%;
   }
   .hide-scrollbar {
     -ms-overflow-style: none;
@@ -56,11 +65,10 @@
     scroll-behavior: smooth;
   }
   body {
-    @apply bg-[#FBFBFB] text-black antialiased font-sans selection:bg-black selection:text-white;
-    overflow-x: hidden;
+    @apply bg-[#FBFBFB] text-black antialiased font-sans selection:bg-black selection:text-white min-h-screen relative overflow-x-hidden;
   }
-  h1, h2, h3 {
-    @apply font-display tracking-tighter;
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-semibold tracking-[-0.03em]; /* -0.5px approximation */
   }
   
   /* Precision Scrollbar */

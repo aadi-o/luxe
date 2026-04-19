@@ -39,10 +39,10 @@ export default function Navbar() {
         <div className="flex justify-between items-center h-full">
           <div className="flex items-center">
             <Link to="/" className="flex items-center space-x-4 md:space-x-8 lg:space-x-10 group" aria-label="LUXE Home">
-              <span className="text-xl md:text-2xl lg:text-3xl font-black tracking-[0.3em] uppercase">LUXE</span>
-              <div className="hidden md:block w-[1px] h-4 md:h-6 bg-black/10" />
+              <span className="text-xl md:text-2xl lg:text-3xl font-black tracking-[0.3em] uppercase text-black">LUXE</span>
+              <div className="hidden md:block w-[1px] h-4 md:h-6 bg-black/20" />
               <div className="hidden xl:flex flex-col">
-                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Curated Intelligence</span>
+                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">Curated Intelligence</span>
                 <span className="text-[8px] font-bold uppercase tracking-[0.4em] text-black/20">Institutional Archive</span>
               </div>
             </Link>
@@ -57,7 +57,7 @@ export default function Navbar() {
                   to={link.href}
                   className={cn(
                     "flex items-center space-x-2 text-[10px] font-black uppercase tracking-[0.4em] transition-all hover:text-black focus-visible:ring-1 focus-visible:ring-black rounded px-2 py-1",
-                    location.pathname === link.href ? "text-black opacity-100" : "text-gray-400 opacity-60 hover:opacity-100"
+                    location.pathname === link.href ? "text-black opacity-100" : "text-gray-500 hover:text-black"
                   )}
                 >
                   <link.icon className="w-3.5 h-3.5" />
@@ -66,21 +66,21 @@ export default function Navbar() {
               ))}
             </div>
 
-            <div className="hidden md:block w-[1px] h-4 bg-black/10" />
+            <div className="hidden md:block w-[1px] h-4 bg-black/20" />
 
             {/* Admin Lock - Desktop Only */}
             <Link 
               to={isAdminPath ? "/admin/dashboard" : "/admin/login"}
-              className="hidden md:flex items-center space-x-2 group p-2.5 hover:bg-black hover:text-white rounded-full transition-all focus-visible:ring-2 focus-visible:ring-black outline-none"
+              className="hidden md:flex items-center space-x-2 group p-2.5 hover:bg-black/5 rounded-full transition-all focus-visible:ring-2 focus-visible:ring-black outline-none"
               aria-label={isAdminPath ? "Admin Dashboard" : "Admin Login"}
             >
-              <Lock className="w-4.5 h-4.5 text-gray-500 group-hover:text-white transition-colors" />
+              <Lock className="w-4.5 h-4.5 text-gray-400 group-hover:text-black transition-colors" />
             </Link>
 
             {/* Mobile Shop Button */}
             <Link 
               to="/shop"
-              className="md:hidden flex items-center px-4 py-2 bg-black text-white rounded-full text-[9px] font-black uppercase tracking-widest active:scale-95 transition-all shadow-lg shadow-black/20"
+              className="btn-accent md:hidden flex items-center px-4 py-2 rounded-full text-[9px] font-black uppercase tracking-widest active:scale-95 transition-all shadow-lg"
             >
               Shop Now
             </Link>
@@ -88,7 +88,7 @@ export default function Navbar() {
             <div className="md:hidden flex items-center">
               <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="text-gray-600 hover:text-black focus:outline-none p-2 rounded-xl active:bg-black/5"
+                className="text-black hover:text-gray-800 focus:outline-none p-2 rounded-xl active:bg-black/10"
                 aria-label={isOpen ? "Close Menu" : "Open Menu"}
                 aria-expanded={isOpen}
               >
@@ -120,13 +120,13 @@ export default function Navbar() {
                   <Link
                     to={link.href}
                     onClick={() => setIsOpen(false)}
-                    className="flex items-center justify-between p-6 rounded-[2rem] text-sm font-black uppercase tracking-[0.2em] text-gray-600 bg-black/5 active:bg-black active:text-white transition-all shadow-sm active:shadow-none"
+                    className="flex items-center justify-between p-6 rounded-[2rem] text-sm font-black uppercase tracking-[0.2em] text-black bg-black/5 active:bg-black/10 transition-all shadow-sm active:shadow-none"
                   >
                     <div className="flex items-center space-x-6">
                       <link.icon className="w-6 h-6" />
                       <span>{link.name}</span>
                     </div>
-                    <Plus className="w-5 h-5 opacity-20" />
+                    <Plus className="w-5 h-5 opacity-50" />
                   </Link>
                 </motion.div>
               ))}
@@ -139,7 +139,7 @@ export default function Navbar() {
                 <Link
                   to={isAdminPath ? "/admin/dashboard" : "/admin/login"}
                   onClick={() => setIsOpen(false)}
-                  className="flex items-center space-x-6 p-6 rounded-[2rem] text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 border border-black/5 active:bg-gray-50 transition-colors"
+                  className="flex items-center space-x-6 p-6 rounded-[2rem] text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 border border-black/10 active:bg-black/5 transition-colors"
                 >
                   <Lock className="w-6 h-6" />
                   <span>Administrative Login</span>
