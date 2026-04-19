@@ -2,7 +2,7 @@ import React from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { getProductBySlug, getProducts } from '../lib/store';
 import { motion } from 'motion/react';
-import { ArrowLeft, ShoppingCart, CheckCircle, Package, ArrowRight } from 'lucide-react';
+import { ArrowLeft, ShoppingCart, CheckCircle, Package, ArrowRight, X, ZoomIn } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { AnimatePresence } from 'motion/react';
 
@@ -13,6 +13,16 @@ export default function ProductPage() {
   const [related, setRelated] = React.useState<any[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [activeImage, setActiveImage] = React.useState(0);
+  const [isLightboxOpen, setIsLightboxOpen] = React.useState(false);
+  const [isHovering, setIsHovering] = React.useState(false);
+  const [mousePosition, setMousePosition] = React.useState({ x: 50, y: 50 });
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
+    const x = ((e.clientX - left) / width) * 100;
+    const y = ((e.clientY - top) / height) * 100;
+    setMousePosition({ x, y });
+  };
 
   React.useEffect(() => {
     const fetchProductData = async () => {
@@ -70,7 +80,11 @@ export default function ProductPage() {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.2 }}
-            className="aspect-[4/5] rounded-[2.5rem] md:rounded-[4rem] overflow-hidden bg-gray-50 glass border-white/60 p-2.5 relative group reflective-surface gloss-highlight smooth-shadow"
+            className="aspect-[4/5] rounded-[2.5rem] md:rounded-[4rem] overflow-hidden bg-gray-50 glass border-white/60 p-2.5 relative group reflective-surface gloss-highlight smooth-shadow cursor-zoom-in"
+            onMouseMove={handleMouseMove}
+            onMouseEnter={() => setIsHovering(true)}
+            onMouseLeave={() => setIsHovering(false)}
+            onClick={() => setIsLightboxOpen(true)}
           >
             <AnimatePresence mode="wait">
               <motion.img 
@@ -78,16 +92,27 @@ export default function ProductPage() {
                 src={product.images[activeImage]} 
                 alt={product.title} 
                 initial={{ opacity: 0, scale: 1.1 }}
-                animate={{ opacity: 1, scale: 1 }}
+                animate={{ 
+                  opacity: 1, 
+                  scale: isHovering ? 2 : 1 
+                }}
                 exit={{ opacity: 0, scale: 0.95 }}
                 transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+                style={{
+                  transformOrigin: `${mousePosition.x}% ${mousePosition.y}%`
+                }}
                 referrerPolicy="no-referrer"
                 loading="eager"
                 decoding="sync"
-                className="w-full h-full object-cover rounded-[2.2rem] md:rounded-[3.8rem]"
+                className="w-full h-full object-cover rounded-[2.2rem] md:rounded-[3.8rem] will-change-transform"
               />
             </AnimatePresence>
             <div className="absolute inset-0 bg-gradient-to-tr from-white/10 via-transparent to-white/5 pointer-events-none" />
+            
+            {/* Quick Zoom Indicator */}
+            <div className="absolute top-6 right-6 w-10 h-10 glass rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+              <ZoomIn className="w-5 h-5 text-black/60" />
+            </div>
           </motion.div>
           
           {/* Gallery Thumbnails (if multiple images exist) */}
@@ -226,6 +251,37 @@ export default function ProductPage() {
           </div>
         </section>
       )}
+
+      {/* Lightbox Modal */}
+      <AnimatePresence>
+        {isLightboxOpen && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-white/95 backdrop-blur-2xl p-4 md:p-12 cursor-zoom-out"
+            onClick={() => setIsLightboxOpen(false)}
+          >
+            <button 
+              className="absolute top-6 right-6 md:top-10 md:right-10 p-4 glass rounded-full hover:bg-black/5 transition-colors z-[101]"
+              onClick={(e) => { e.stopPropagation(); setIsLightboxOpen(false); }}
+            >
+              <X className="w-6 h-6 text-black" />
+            </button>
+            <motion.img 
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              src={product.images[activeImage]}
+              alt={product.title}
+              className="max-w-full max-h-full object-contain rounded-3xl drop-shadow-2xl"
+              onClick={(e) => e.stopPropagation()} 
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }

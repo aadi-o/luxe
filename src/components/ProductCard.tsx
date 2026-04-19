@@ -21,7 +21,7 @@ export default function ProductCard({ product }: { product: Product }) {
               loading="lazy"
               decoding="async"
               referrerPolicy="no-referrer"
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-[600ms] ease-[0.16,1,0.3,1] grayscale-[0.2] group-hover:grayscale-0 will-change-transform"
+              className="w-full h-full object-cover group-hover:scale-125 transition-transform duration-[800ms] ease-[0.16,1,0.3,1] grayscale-[0.2] group-hover:grayscale-0 will-change-transform"
             />
             {/* Soft gradient bottom for badge contrast */}
             <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-60 pointer-events-none" />
