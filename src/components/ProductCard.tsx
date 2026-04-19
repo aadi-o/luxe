@@ -54,7 +54,7 @@ export default function ProductCard({ product }: { product: Product }) {
           
           <div className="pt-4 border-t border-black/5 flex items-center justify-between">
             <span className="text-lg font-bold text-black tracking-tight">
-              {product.currency || 'USD'} {(product.price || 0).toLocaleString()}
+              ₹ {(product.price || 0).toLocaleString('en-IN')}/-
             </span>
             <span className="text-xs font-medium text-gray-400 group-hover:text-black transition-colors tracking-wide uppercase">
               View Info
@@ -63,5 +63,30 @@ export default function ProductCard({ product }: { product: Product }) {
         </div>
       </Link>
     </motion.div>
+  );
+}
+
+export function ProductCardSkeleton() {
+  return (
+    <div className="block h-full glass p-4 flex flex-col pointer-events-none">
+      <div className="relative aspect-[4/3] overflow-hidden rounded-xl mb-6 shadow-inner bg-gray-200/50 animate-pulse"></div>
+      
+      <div className="flex-grow flex flex-col justify-between space-y-4 px-2">
+        <div>
+          <div className="flex justify-between items-start gap-4 mb-2">
+            <div className="w-3/4 h-6 md:h-8 bg-gray-200/60 rounded animate-pulse"></div>
+          </div>
+          <div className="space-y-2 mt-3">
+            <div className="w-full h-4 bg-gray-200/50 rounded animate-pulse"></div>
+            <div className="w-4/5 h-4 bg-gray-200/50 rounded animate-pulse"></div>
+          </div>
+        </div>
+        
+        <div className="pt-4 border-t border-black/5 flex items-center justify-between">
+          <div className="w-1/3 h-6 md:h-7 bg-gray-200/60 rounded animate-pulse"></div>
+          <div className="w-1/4 h-3 bg-gray-200/50 rounded animate-pulse"></div>
+        </div>
+      </div>
+    </div>
   );
 }

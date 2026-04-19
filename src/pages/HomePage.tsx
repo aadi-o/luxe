@@ -144,7 +144,7 @@ export default function HomePage() {
                         </div>
                         
                         <div className="mt-4 space-y-3">
-                           <div className="text-xl md:text-2xl font-black text-gray-900">{product.currency || 'USD'} {product.price?.toLocaleString() || 0}</div>
+                           <div className="text-xl md:text-2xl font-black text-gray-900">₹ {(product.price || 0).toLocaleString('en-IN')}/-</div>
                            
                            {isCenter && (
                              <div className="text-[8px] font-bold text-gray-400 uppercase tracking-widest animate-pulse flex justify-center items-center space-x-2">

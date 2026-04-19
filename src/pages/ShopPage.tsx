@@ -1,6 +1,6 @@
 import React from 'react';
 import { getProducts } from '../lib/store';
-import ProductCard from '../components/ProductCard';
+import ProductCard, { ProductCardSkeleton } from '../components/ProductCard';
 import { motion, AnimatePresence } from 'motion/react';
 import { Search, SlidersHorizontal } from 'lucide-react';
 
@@ -22,14 +22,6 @@ export default function ShopPage() {
     p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     p.category.toLowerCase().includes(searchQuery.toLowerCase())
   );
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="w-12 h-12 border-4 border-black/10 border-t-black rounded-full animate-spin"></div>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-12 md:space-y-24 texture pb-40 overflow-hidden">
@@ -83,29 +75,49 @@ export default function ShopPage() {
             layout
             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-y-16 md:gap-y-24 gap-x-8 md:gap-x-12"
           >
-            {filteredProducts.map((product, idx) => (
-              <motion.div
-                layout
-                key={product.id}
-                initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.9, y: 10 }}
-                transition={{ 
-                  opacity: { duration: 0.4 },
-                  layout: { type: 'spring', stiffness: 200, damping: 25 },
-                  delay: idx * 0.05 
-                }}
-                className={idx % 2 === 0 ? "lg:mt-12" : ""}
-              >
-                <ProductCard product={product} />
-              </motion.div>
-            ))}
+            {loading ? (
+              // Skeleton Loaders
+              Array.from({ length: 6 }).map((_, idx) => (
+                <motion.div
+                  key={`skeleton-${idx}`}
+                  initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.9, y: 10 }}
+                  transition={{ 
+                    opacity: { duration: 0.4 },
+                    delay: idx * 0.05 
+                  }}
+                  className={idx % 2 === 0 ? "lg:mt-12" : ""}
+                >
+                  <ProductCardSkeleton />
+                </motion.div>
+              ))
+            ) : (
+              // Actual Products
+              filteredProducts.map((product, idx) => (
+                <motion.div
+                  layout
+                  key={product.id}
+                  initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.9, y: 10 }}
+                  transition={{ 
+                    opacity: { duration: 0.4 },
+                    layout: { type: 'spring', stiffness: 200, damping: 25 },
+                    delay: idx * 0.05 
+                  }}
+                  className={idx % 2 === 0 ? "lg:mt-12" : ""}
+                >
+                  <ProductCard product={product} />
+                </motion.div>
+              ))
+            )}
           </motion.div>
         </AnimatePresence>
       </div>
 
       {/* Empty State */}
-      {filteredProducts.length === 0 && (
+      {!loading && filteredProducts.length === 0 && (
         <div className="py-40 text-center space-y-8">
            <p className="text-4xl font-black text-black/5 uppercase tracking-tighter italic">No records matches criteria.</p>
            <button 

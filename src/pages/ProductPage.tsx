@@ -133,7 +133,7 @@ export default function ProductPage() {
             </h1>
             <div className="flex items-center space-x-6 mt-4">
               <span className="text-4xl md:text-6xl font-black tracking-tighter text-black">
-                {product.currency || 'USD'} {(product.price || 0).toLocaleString()}
+                ₹ {(product.price || 0).toLocaleString('en-IN')}/-
               </span>
               <div className="h-0.5 flex-grow bg-black/5" />
             </div>
